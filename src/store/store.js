@@ -13,9 +13,17 @@ const persistConfig = {
 
 const persistedReducer = persistReducer(persistConfig, rootReducers);
 
-const middlewares = [logger];
+const middlewares = [process.env.NODE_ENV !== 'production' && logger].filter(
+  Boolean
+);
 
-const composedEnhancers = compose(applyMiddleware(...middlewares));
+const composeEnhancer =
+  (process.env.NODE_ENV !== 'production' &&
+    window &&
+    window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__) ||
+  compose;
+
+const composedEnhancers = composeEnhancer(applyMiddleware(...middlewares));
 
 export const store = createStore(
   persistedReducer,
