@@ -63,24 +63,26 @@ export const createUserDocumentFromAuth = async (
   if (!userAuth) return;
 
   const userDocRef = doc(db, 'users', userAuth.uid);
+
   const userSnapshot = await getDoc(userDocRef);
 
   if (!userSnapshot.exists()) {
-    const { email } = userAuth;
+    const { displayName, email } = userAuth;
     const createdAt = new Date();
 
     try {
       await setDoc(userDocRef, {
+        displayName,
         email,
         createdAt,
         ...additionalInformation,
       });
     } catch (error) {
-      console.log('error creating the user.', error.message);
+      console.log('error creating the user', error.message);
     }
   }
 
-  return userDocRef;
+  return userSnapshot;
 };
 
 export const createUserAuthWithEmailAndPassword = async (email, password) => {
@@ -99,3 +101,16 @@ export const signOutUser = async () => signOut(auth);
 
 export const onAuthStateChangedListener = (callback) =>
   onAuthStateChanged(auth, callback);
+
+export const getCurrentUser = () => {
+  return new Promise((resolve, reject) => {
+    const unsubscribe = onAuthStateChanged(
+      auth,
+      (useAuth) => {
+        unsubscribe();
+        resolve(useAuth);
+      },
+      reject
+    );
+  });
+};
